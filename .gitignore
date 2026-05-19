@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+decisions.json
+connectors.json
+
+# Node / React
+frontend/node_modules/
+frontend/build/
+
+# Logs and local environment
+*.log
+.env
+.env.*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
