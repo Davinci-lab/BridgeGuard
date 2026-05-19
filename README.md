@@ -1,4 +1,4 @@
-# CarthEdge BridgeGuard
+# BridgeGuard
 
 **Defensive runtime security kernel for cross-chain bridge systems.**
 
