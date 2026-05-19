@@ -29,7 +29,7 @@ const DecisionHistory: React.FC = () => {
                             <strong>{decision.decision}</strong>
                             <p>{new Date(decision.timestamp).toLocaleString()}</p>
                             <p>Score: {decision.risk_score.toFixed(1)}</p>
-                            <p>Main reason: {decision.reason_codes[0] ?? 'None'}</p>
+                            <span className="badge">{decision.reason_codes[0] ?? 'None'}</span>
                         </article>
                     ))}
                 </div>

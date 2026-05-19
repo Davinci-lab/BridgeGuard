@@ -52,6 +52,7 @@ const PolicyDecisionCard: React.FC<Props> = ({ decision }) => {
 
     const riskClass = getRiskClass(decision.risk_score);
     const clampedRisk = Math.max(0, Math.min(decision.risk_score, 100));
+    const primaryReason = decision.reason_codes[0] ?? 'NO_REASON';
 
     return (
         <section className={`card decision-card ${decisionClassMap[decision.decision]}`}>
@@ -59,20 +60,31 @@ const PolicyDecisionCard: React.FC<Props> = ({ decision }) => {
                 <div>
                     <span className="decision-label">Policy decision</span>
                     <h3 className="decision-title">{decision.decision}</h3>
+                    <p className="decision-summary">Primary signal: <strong>{primaryReason}</strong></p>
                 </div>
                 <button className="secondary-button" onClick={() => exportDecision(decision)}>
                     Export Decision (JSON)
                 </button>
             </div>
 
-            <div className="risk-gauge-row">
-                <span className="decision-label">Risk score</span>
+            <div className="risk-gauge-row risk-gauge-hero">
                 <svg className={`risk-gauge ${riskClass}`} viewBox="0 0 120 120" role="img" aria-label={`Risk score ${decision.risk_score.toFixed(1)} out of 100`}>
+                    <defs>
+                        <linearGradient id="risk-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="50%" stopColor="#f59e0b" />
+                            <stop offset="100%" stopColor="#ef4444" />
+                        </linearGradient>
+                    </defs>
                     <circle className="risk-gauge-track" cx="60" cy="60" r="48" pathLength="100" />
                     <circle className="risk-gauge-fill" cx="60" cy="60" r="48" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - clampedRisk} />
                     <text className="risk-gauge-text" x="60" y="65">{decision.risk_score.toFixed(0)}</text>
                 </svg>
-                <strong>{decision.risk_score.toFixed(1)} / 100</strong>
+                <div>
+                    <span className="decision-label">Risk score</span>
+                    <strong className="risk-score-text">{decision.risk_score.toFixed(1)} / 100</strong>
+                    <p className="muted">The score summarizes invariant violations, governance signals, finality, caps, and replay risk.</p>
+                </div>
             </div>
 
             <div>

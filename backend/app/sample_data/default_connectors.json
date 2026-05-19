@@ -1,0 +1,109 @@
+[
+  {
+    "id": "",
+    "name": "Wormhole Sepolia (ETH)",
+    "type": "evm",
+    "enabled": true,
+    "rpc_url": "https://rpc.sepolia.org",
+    "chain_id": 11155111,
+    "contract_address": "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78",
+    "abi": [
+      {
+        "inputs": [],
+        "name": "numGuardians",
+        "outputs": [{ "internalType": "uint32", "name": "", "type": "uint32" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "outstandingBridged",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "totalSupply",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "emergencyShutdown",
+        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    "method_mapping": {
+      "locked_collateral": "outstandingBridged",
+      "minted_supply": "totalSupply",
+      "burned_proven": "",
+      "released_supply": "",
+      "signer_count": "numGuardians",
+      "required_signers": null,
+      "emergency_mode": "emergencyShutdown",
+      "config_change_block": null,
+      "current_block": null
+    },
+    "daily_cap": 1000000,
+    "route_cap": 500000,
+    "asset_cap": 5000000,
+    "source_chain": "Sepolia",
+    "dest_chain": "Wormhole Testnet",
+    "asset": "ETH",
+    "finality_blocks": 15
+  },
+  {
+    "id": "",
+    "name": "Axelar Gateway (Sepolia)",
+    "type": "evm",
+    "enabled": true,
+    "rpc_url": "https://rpc.sepolia.org",
+    "chain_id": 11155111,
+    "contract_address": "0xe432150cce91c13a887f7D836923d5597adD8E31",
+    "abi": [
+      {
+        "inputs": [],
+        "name": "operator",
+        "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "totalSupply",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "emergencyShutdown",
+        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    "method_mapping": {
+      "locked_collateral": "totalSupply",
+      "minted_supply": "",
+      "burned_proven": "",
+      "released_supply": "",
+      "signer_count": "",
+      "required_signers": null,
+      "emergency_mode": "emergencyShutdown",
+      "config_change_block": null,
+      "current_block": null
+    },
+    "daily_cap": 1000000,
+    "route_cap": 500000,
+    "asset_cap": 5000000,
+    "source_chain": "Sepolia",
+    "dest_chain": "Axelar Testnet",
+    "asset": "ETH",
+    "finality_blocks": 15
+  }
+]

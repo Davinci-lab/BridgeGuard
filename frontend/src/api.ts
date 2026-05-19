@@ -30,6 +30,7 @@ export const fetchReasonCodes = () => API.get<Record<ReasonCode, string>>('/reas
 export const fetchMetrics = () => API.get<Metrics>('/metrics');
 
 export const fetchConnectors = () => API.get<ConnectorConfig[]>('/connectors/');
+export const fetchConnectorPresets = () => API.get<ConnectorConfig[]>('/connectors/presets');
 export const createConnector = (data: ConnectorConfig) => API.post<ConnectorConfig>('/connectors/', data);
 export const updateConnector = (id: string, data: ConnectorConfig) => API.put<ConnectorConfig>(`/connectors/${id}`, data);
 export const deleteConnector = (id: string) => API.delete(`/connectors/${id}`);

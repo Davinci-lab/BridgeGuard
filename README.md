@@ -134,6 +134,11 @@ backend/connectors.json
 
 This file is intentionally ignored by Git.
 
+Two demo presets are shipped in `backend/app/sample_data/default_connectors.json` and can be loaded from the dashboard with **Load preset connectors**:
+
+- Wormhole Sepolia (ETH)
+- Axelar Gateway (Sepolia)
+
 For local demos, use:
 
 ```json

@@ -3,6 +3,7 @@ import {
     createConnector,
     deleteConnector,
     evaluateConnector,
+    fetchConnectorPresets,
     fetchConnectors,
     getApiErrorMessage,
 } from '../api';
@@ -39,6 +40,7 @@ const ConnectorManager: React.FC = () => {
     const [configText, setConfigText] = useState<string>('');
     const [result, setResult] = useState<ConnectorEvaluationResult | null>(null);
     const [error, setError] = useState<string>('');
+    const [status, setStatus] = useState<string>('');
 
     const loadConnectors = () => {
         fetchConnectors()
@@ -65,9 +67,32 @@ const ConnectorManager: React.FC = () => {
             await createConnector({ ...connector, id: connector.id ?? '' });
             setResult(null);
             setError('');
+            setStatus('Connector stored locally.');
             loadConnectors();
         } catch (err) {
             setError(err instanceof Error ? err.message : getApiErrorMessage(err));
+        }
+    };
+
+    const connectorKey = (connector: ConnectorConfig) =>
+        `${connector.name.toLowerCase()}|${connector.chain_id}|${connector.contract_address.toLowerCase()}`;
+
+    const handleLoadPresets = async () => {
+        try {
+            const [existingRes, presetsRes] = await Promise.all([fetchConnectors(), fetchConnectorPresets()]);
+            const existingKeys = new Set(existingRes.data.map(connectorKey));
+            const missing = presetsRes.data.filter(preset => !existingKeys.has(connectorKey(preset)));
+
+            for (const preset of missing) {
+                await createConnector({ ...preset, id: '' });
+            }
+
+            setResult(null);
+            setError('');
+            setStatus(missing.length === 0 ? 'Preset connectors are already loaded.' : `Loaded ${missing.length} preset connector(s).`);
+            loadConnectors();
+        } catch (err) {
+            setError(getApiErrorMessage(err));
         }
     };
 
@@ -85,6 +110,7 @@ const ConnectorManager: React.FC = () => {
         try {
             await deleteConnector(id);
             setResult(null);
+            setStatus('Connector deleted.');
             loadConnectors();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -97,8 +123,13 @@ const ConnectorManager: React.FC = () => {
             <p className="section-subtitle">
                 Configure local EVM bridge read-only connectors and evaluate them through the same defensive policy engine.
             </p>
+            <div className="controls-row connector-toolbar">
+                <button className="secondary-button" onClick={handleLoadPresets}>Load preset connectors</button>
+                <button className="secondary-button" onClick={loadConnectors}>Refresh</button>
+            </div>
 
             {error && <p className="error">{error}</p>}
+            {status && <p className="status-message">{status}</p>}
 
             <div className="connector-grid">
                 <div className="connector-form">
@@ -130,6 +161,7 @@ const ConnectorManager: React.FC = () => {
                             <strong>{connector.name}</strong>
                             <p>{connector.source_chain} to {connector.dest_chain} | {connector.asset}</p>
                             <p>Chain ID: {connector.chain_id}</p>
+                            <p className="connector-address">{connector.contract_address}</p>
                             <div className="controls-row">
                                 <button className="secondary-button" onClick={() => handleEvaluate(connector.id)}>Evaluate</button>
                                 <button className="secondary-button danger-button" onClick={() => handleDelete(connector.id)}>Delete</button>

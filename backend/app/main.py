@@ -10,7 +10,7 @@ from .routes_connectors import router as connectors_router
 import uuid
 import os
 
-app = FastAPI(title="CarthEdge BridgeGuard", version="0.1.0")
+app = FastAPI(title="BridgeGuard", version="0.1.0")
 app.include_router(connectors_router)
 
 allowed_origins = [

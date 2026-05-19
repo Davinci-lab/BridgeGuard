@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
 from .connector_config import ConnectorConfig
 from .connectors import ConnectorEngine
@@ -5,10 +8,16 @@ from .storage_connectors import load_connectors, save_connectors, get_connector
 import uuid
 
 router = APIRouter(prefix="/connectors", tags=["connectors"])
+DEFAULT_CONNECTORS_FILE = Path(__file__).parent / "sample_data" / "default_connectors.json"
 
 @router.get("/")
 def list_connectors():
     return load_connectors()
+
+@router.get("/presets")
+def list_connector_presets():
+    with open(DEFAULT_CONNECTORS_FILE, encoding="utf-8") as f:
+        return [ConnectorConfig(**item) for item in json.load(f)]
 
 @router.post("/")
 def create_connector(config: ConnectorConfig):

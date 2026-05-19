@@ -51,7 +51,10 @@ const AttackReplay: React.FC = () => {
 
             {selectedAttack && (
                 <article className="card incident-card">
-                    <h3 className="section-title">{selectedAttack.name}</h3>
+                    <div className="incident-title-row">
+                        <h3 className="section-title">{selectedAttack.name}</h3>
+                        <span className="badge reason-medium">Expected: {selectedAttack.expected_decision}</span>
+                    </div>
                     <div className="incident-grid">
                         <div>
                             <span className="detail-label">Date</span>
@@ -71,6 +74,10 @@ const AttackReplay: React.FC = () => {
                         </div>
                     </div>
                     <p>{selectedAttack.summary}</p>
+                    <div className="text-panel">
+                        <h4>Defensive control under test</h4>
+                        <p>{selectedAttack.defensive_control}</p>
+                    </div>
                     {selectedAttack.source && (
                         <a href={selectedAttack.source} target="_blank" rel="noreferrer">
                             Open public incident source

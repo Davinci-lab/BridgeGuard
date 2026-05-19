@@ -99,11 +99,11 @@ export interface EVMMethodMapping {
   minted_supply: string;
   burned_proven: string;
   released_supply: string;
-  signer_count?: string;
-  required_signers?: string;
-  emergency_mode?: string;
-  config_change_block?: string;
-  current_block?: string;
+  signer_count?: string | null;
+  required_signers?: string | null;
+  emergency_mode?: string | null;
+  config_change_block?: string | null;
+  current_block?: string | null;
 }
 
 export interface AbiInput {
