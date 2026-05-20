@@ -19,7 +19,8 @@ export type ReasonCode =
     | 'ASSET_CAP_EXCEEDED'
     | 'ROUTE_CAP_EXCEEDED'
     | 'TVL_DIVERGENCE'
-    | 'EMERGENCY_MODE_ACTIVE';
+    | 'EMERGENCY_MODE_ACTIVE'
+    | 'CUSTOM';
 
 export interface TransferSimulation {
     source_chain: string;

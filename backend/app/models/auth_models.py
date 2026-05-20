@@ -42,3 +42,9 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    policy_config = relationship(
+        "PolicyConfig",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )

@@ -1,12 +1,16 @@
-from typing import List, Tuple
+from typing import List
 from .reason_codes import ReasonCode
 from .models import TransferSimulation
+from .services.rule_engine import evaluate_custom_rules
 
 BUFFER_RATIO = 0.05  # 5% buffer for normal fluctuations
 
 class InvariantEngine:
     @staticmethod
-    def check_invariants(sim: TransferSimulation) -> List[ReasonCode]:
+    def check_invariants(
+        sim: TransferSimulation,
+        custom_rules: list[dict] | None = None,
+    ) -> List[ReasonCode]:
         violations: List[ReasonCode] = []
 
         # Core accounting
@@ -54,4 +58,5 @@ class InvariantEngine:
         if sim.signer_count < 4:
             violations.append(ReasonCode.VALIDATOR_SET_RISK)
 
+        violations.extend(evaluate_custom_rules(sim, custom_rules))
         return violations

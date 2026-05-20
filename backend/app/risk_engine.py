@@ -16,15 +16,26 @@ RISK_WEIGHTS = {
     ReasonCode.ASSET_CAP_EXCEEDED: 25,
     ReasonCode.ROUTE_CAP_EXCEEDED: 25,
     ReasonCode.TVL_DIVERGENCE: 40,
+    ReasonCode.CUSTOM: 30,
 }
 
 class RiskEngine:
     @staticmethod
-    def compute_risk_score(violations: List[ReasonCode]) -> float:
+    def compute_risk_score(
+        violations: List[ReasonCode],
+        risk_weights: dict | None = None,
+    ) -> float:
         if not violations:
             return 0.0
+        weights = RISK_WEIGHTS.copy()
+        for key, value in (risk_weights or {}).items():
+            try:
+                reason = key if isinstance(key, ReasonCode) else ReasonCode(str(key))
+            except ValueError:
+                continue
+            weights[reason] = float(value)
         # Use max weight as base, add combination penalty
-        max_weight = max((RISK_WEIGHTS.get(v, 10) for v in violations), default=10)
+        max_weight = max((weights.get(v, 10) for v in violations), default=10)
         # Combination: multiple critical violations increase score
         combo_penalty = min(len(violations) * 5, 40)
         score = min(max_weight + combo_penalty, 100)

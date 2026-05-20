@@ -4,9 +4,13 @@ from .models import PolicyDecision, TransferSimulation
 from .invariant_engine import InvariantEngine
 from .risk_engine import RiskEngine
 
-def decide(sim: TransferSimulation) -> Tuple[PolicyDecision, float, List[ReasonCode], str, str]:
-    violations = InvariantEngine.check_invariants(sim)
-    risk_score = RiskEngine.compute_risk_score(violations)
+def decide(
+    sim: TransferSimulation,
+    risk_weights: dict | None = None,
+    custom_rules: list[dict] | None = None,
+) -> Tuple[PolicyDecision, float, List[ReasonCode], str, str]:
+    violations = InvariantEngine.check_invariants(sim, custom_rules=custom_rules)
+    risk_score = RiskEngine.compute_risk_score(violations, risk_weights=risk_weights)
 
     # Automatic freeze triggers
     if ReasonCode.MINT_EXCEEDS_LOCKED in violations or \

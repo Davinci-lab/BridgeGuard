@@ -13,6 +13,7 @@ from ..models.auth_models import Project
 from ..models.decision_models import DecisionRecord as DBDecisionRecord
 from ..models.listener_models import Listener
 from ..policy_engine import decide
+from .policy_service import get_effective_policy
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,12 @@ def save_simulation_decision(
     simulation: TransferSimulation,
     enqueue_notifications: bool = False,
 ) -> DBDecisionRecord:
-    decision, risk_score, violations, explanation, recommended = decide(simulation)
+    policy = get_effective_policy(db, project_id)
+    decision, risk_score, violations, explanation, recommended = decide(
+        simulation,
+        risk_weights=policy["risk_weights"],
+        custom_rules=policy["custom_rules"],
+    )
     record = DBDecisionRecord(
         id=str(uuid.uuid4()),
         timestamp=datetime.now(timezone.utc),

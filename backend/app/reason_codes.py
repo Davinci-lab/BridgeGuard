@@ -15,6 +15,7 @@ class ReasonCode(str, Enum):
     ROUTE_CAP_EXCEEDED = "ROUTE_CAP_EXCEEDED"
     TVL_DIVERGENCE = "TVL_DIVERGENCE"
     EMERGENCY_MODE_ACTIVE = "EMERGENCY_MODE_ACTIVE"
+    CUSTOM = "CUSTOM"
 
 REASON_DESCRIPTIONS = {
     ReasonCode.OUTFLOW_EXCEEDS_INFLOW: "Total outflow exceeds inflow plus allowed buffer",
@@ -31,4 +32,5 @@ REASON_DESCRIPTIONS = {
     ReasonCode.ROUTE_CAP_EXCEEDED: "Per-route transfer cap exceeded",
     ReasonCode.TVL_DIVERGENCE: "On‑chain TVL diverges from expected accounting",
     ReasonCode.EMERGENCY_MODE_ACTIVE: "Emergency pause mode is active on the bridge",
+    ReasonCode.CUSTOM: "Project-defined custom policy rule matched",
 }

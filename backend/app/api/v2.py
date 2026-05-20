@@ -15,10 +15,12 @@ from ..models.alert_models import AlertRule
 from ..models.auth_models import Project, User
 from ..models.decision_models import DecisionRecord as DBDecisionRecord
 from ..models.listener_models import Listener
+from ..models.policy_models import PolicyConfig
 from ..schemas.v2.alerts import AlertRuleCreate, AlertRuleRead, AlertRuleUpdate, AlertTestResponse
 from ..schemas.v2.projects import ProjectCreate, ProjectRead
 from ..schemas.v2.simulation import DecisionRecordRead, PaginatedDecisions, TransferSimulation
 from ..schemas.v2.listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
+from ..schemas.v2.policy import PolicyConfigRead, PolicyConfigUpdate
 from ..services import alert_service
 from ..services.connector_discovery import (
     ConnectorDiscoveryRequest,
@@ -26,6 +28,7 @@ from ..services.connector_discovery import (
     discover_evm_connector,
 )
 from ..services.listener_service import save_simulation_decision, start_listener, stop_listener
+from ..services.policy_service import get_effective_policy, upsert_policy_config
 from ..storage_connectors import get_connector, load_connectors, save_connectors
 
 
@@ -152,6 +155,7 @@ def delete_project(
 
     db.execute(delete(AlertRule).where(AlertRule.project_id == project.id))
     db.execute(delete(Listener).where(Listener.project_id == project.id))
+    db.execute(delete(PolicyConfig).where(PolicyConfig.project_id == project.id))
     db.execute(delete(DBDecisionRecord).where(DBDecisionRecord.project_id == project.id))
     db.delete(project)
     db.commit()
@@ -327,3 +331,30 @@ def test_alert_rule(
         sent=alert_service.test_alert_rule(alert),
         channel_type=alert.channel_type,
     )
+
+
+@router.get("/projects/{project_id}/policy", response_model=PolicyConfigRead)
+def get_project_policy(
+    project_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    project = get_owned_project(db, project_id, current_user)
+    return get_effective_policy(db, project.id)
+
+
+@router.put("/projects/{project_id}/policy", response_model=PolicyConfigRead)
+def update_project_policy(
+    project_id: int,
+    payload: PolicyConfigUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    project = get_owned_project(db, project_id, current_user)
+    policy = upsert_policy_config(
+        db,
+        project.id,
+        payload.risk_weights,
+        [rule.model_dump() for rule in payload.custom_rules],
+    )
+    return get_effective_policy(db, policy.project_id)
