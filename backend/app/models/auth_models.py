@@ -27,3 +27,8 @@ class Project(Base):
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
 
     owner: Mapped[User] = relationship("User", back_populates="projects")
+    decisions = relationship(
+        "DecisionRecord",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

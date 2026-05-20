@@ -5,37 +5,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..dependencies import ALGORITHM, SECRET_KEY, get_current_user
 from ..models.auth_models import Project, User
+from ..schemas.v2.auth import RegisterRequest, TokenResponse, UserRead
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
-
-
-class RegisterRequest(BaseModel):
-    email: str = Field(..., min_length=3, max_length=255)
-    password: str = Field(..., min_length=8, max_length=128)
-    project_name: str | None = Field(default="Default Project", max_length=255)
-
-
-class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    is_active: bool
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
 
 
 def normalize_email(email: str) -> str:

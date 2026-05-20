@@ -7,6 +7,7 @@ from .storage import save_decision, load_all_decisions, clear_storage
 from .reason_codes import REASON_DESCRIPTIONS, ReasonCode
 from datetime import datetime
 from .api.auth import router as auth_router
+from .api.v2 import router as bridgeguard_v2_router
 from .database import init_db
 from .routes_connectors import router as connectors_router
 import uuid
@@ -36,6 +37,7 @@ v1_router = APIRouter(tags=["v1"])
 v1_router.include_router(connectors_router)
 v2_router = APIRouter()
 v2_router.include_router(auth_router)
+v2_router.include_router(bridgeguard_v2_router)
 
 
 @app.on_event("startup")
