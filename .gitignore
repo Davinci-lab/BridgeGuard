@@ -6,6 +6,7 @@ __pycache__/
 venv/
 decisions.json
 connectors.json
+*.db
 
 # Node / React
 frontend/node_modules/

@@ -1,8 +1,11 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from .reason_codes import ReasonCode
+from typing import List, Optional
+
+from pydantic import BaseModel
+
+from ..reason_codes import ReasonCode
+
 
 class PolicyDecision(str, Enum):
     ALLOW = "ALLOW"
@@ -11,8 +14,10 @@ class PolicyDecision(str, Enum):
     ESCALATE_TO_GUARDIANS = "ESCALATE_TO_GUARDIANS"
     REQUIRE_EXTRA_SIGNATURES = "REQUIRE_EXTRA_SIGNATURES"
 
+
 class TransferSimulation(BaseModel):
     """Input for a simulated cross-chain transfer."""
+
     source_chain: str = "Ethereum"
     dest_chain: str = "Arbitrum"
     asset: str = "ETH"
@@ -38,6 +43,7 @@ class TransferSimulation(BaseModel):
     total_outflow: float = 8_000.0
     known_message_hash: Optional[str] = None
 
+
 class DecisionRecord(BaseModel):
     id: str
     timestamp: datetime
@@ -47,6 +53,7 @@ class DecisionRecord(BaseModel):
     reason_codes: List[ReasonCode]
     explanation: str
     recommended_action: str
+
 
 class Attack(BaseModel):
     name: str
@@ -60,6 +67,7 @@ class Attack(BaseModel):
     reason_codes: List[ReasonCode]
     summary: str
     source: Optional[str] = None
+
 
 class Metrics(BaseModel):
     total_simulations: int

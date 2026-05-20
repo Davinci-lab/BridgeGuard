@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .models import TransferSimulation, DecisionRecord, Attack, Metrics
 from .policy_engine import decide
@@ -6,12 +6,13 @@ from .attack_replay import load_attacks, load_normal_flows, attack_to_simulation
 from .storage import save_decision, load_all_decisions, clear_storage
 from .reason_codes import REASON_DESCRIPTIONS, ReasonCode
 from datetime import datetime
+from .api.auth import router as auth_router
+from .database import init_db
 from .routes_connectors import router as connectors_router
 import uuid
 import os
 
 app = FastAPI(title="BridgeGuard", version="0.1.0")
-app.include_router(connectors_router)
 
 allowed_origins = [
     origin.strip()
@@ -31,20 +32,33 @@ app.add_middleware(
 
 attacks = load_attacks()
 normal_flows = load_normal_flows()
+v1_router = APIRouter(tags=["v1"])
+v1_router.include_router(connectors_router)
+v2_router = APIRouter()
+v2_router.include_router(auth_router)
 
-@app.get("/health")
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
+
+@v1_router.get("/health")
 def health():
     return {"status": "ok", "version": "0.1.0"}
 
-@app.get("/attacks")
+
+@v1_router.get("/attacks")
 def get_attacks():
     return attacks
 
-@app.get("/normal-flows")
+
+@v1_router.get("/normal-flows")
 def get_normal_flows():
     return normal_flows
 
-@app.post("/simulate")
+
+@v1_router.post("/simulate")
 def simulate_transfer(sim: TransferSimulation):
     try:
         decision, risk_score, violations, explanation, recommended = decide(sim)
@@ -63,7 +77,8 @@ def simulate_transfer(sim: TransferSimulation):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/simulate-attack/{attack_name:path}")
+
+@v1_router.post("/simulate-attack/{attack_name:path}")
 def simulate_by_attack_name(attack_name: str):
     attack = next((a for a in attacks if a.name == attack_name), None)
     if not attack:
@@ -71,15 +86,18 @@ def simulate_by_attack_name(attack_name: str):
     sim = attack_to_simulation(attack)
     return simulate_transfer(sim)
 
-@app.get("/decisions")
+
+@v1_router.get("/decisions")
 def get_decisions():
     return load_all_decisions()
 
-@app.get("/reason-codes")
+
+@v1_router.get("/reason-codes")
 def get_reason_codes():
     return {code.value: desc for code, desc in REASON_DESCRIPTIONS.items()}
 
-@app.get("/metrics")
+
+@v1_router.get("/metrics")
 def get_metrics():
     decisions = load_all_decisions()
     total = len(decisions)
@@ -106,7 +124,13 @@ def get_metrics():
         top_reason_codes=[{"code": k, "count": v} for k, v in top_reasons]
     )
 
-@app.delete("/decisions")
+
+@v1_router.delete("/decisions")
 def clear_decisions():
     clear_storage()
     return {"status": "cleared"}
+
+
+app.include_router(v1_router)
+app.include_router(v1_router, prefix="/api/v1")
+app.include_router(v2_router, prefix="/api/v2")
