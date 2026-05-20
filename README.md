@@ -1,6 +1,6 @@
 # BridgeGuard
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Davinci-lab/BridgeGuard?style=flat-square) ![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen?style=flat-square) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![Twitter](https://img.shields.io/twitter/follow/BridgeGuard_io?style=social)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Davinci-lab/BridgeGuard?style=flat-square) ![Tests](https://img.shields.io/badge/tests-43%20passed-brightgreen?style=flat-square) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![Twitter](https://img.shields.io/twitter/follow/BridgeGuard_io?style=social)
 
 **Defensive runtime security kernel for cross-chain bridge systems.**
 
@@ -219,7 +219,7 @@ See [RISK_MODEL.md](RISK_MODEL.md).
 
 ## Commercial Use
 
-For enterprise features, managed hosting, or custom integrations, contact us at [email/website].
+For managed hosting, enterprise features, or custom integrations, contact us at [email/website].
 
 ## Data Sources
 

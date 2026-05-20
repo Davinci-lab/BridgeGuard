@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +16,14 @@ from .routes_connectors import router as connectors_router
 import uuid
 import os
 
-app = FastAPI(title="BridgeGuard", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="BridgeGuard", version="0.1.0", lifespan=lifespan)
 
 allowed_origins = [
     origin.strip()
@@ -92,11 +100,6 @@ v1_router.include_router(connectors_router)
 v2_router = APIRouter()
 v2_router.include_router(auth_router)
 v2_router.include_router(bridgeguard_v2_router)
-
-
-@app.on_event("startup")
-def startup():
-    init_db()
 
 
 @v1_router.get("/health")

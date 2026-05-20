@@ -4,6 +4,9 @@ setlocal EnableExtensions
 set "ROOT=%~dp0"
 set "BACKEND=%ROOT%backend"
 set "FRONTEND=%ROOT%frontend"
+set "VENV=%ROOT%.venv"
+set "BACKEND_PYTHON=%VENV%\Scripts\python.exe"
+set "BACKEND_ALEMBIC=%VENV%\Scripts\alembic.exe"
 set "NODE_OPTIONS=--max-old-space-size=4096"
 set "BACKEND_HOST=127.0.0.1"
 set "BACKEND_PORT=8000"
@@ -47,11 +50,19 @@ if errorlevel 1 (
 )
 
 echo [1/9] Verifying backend dependencies...
+if not exist "%BACKEND_PYTHON%" (
+    echo Creating local Python virtual environment...
+    python -m venv "%VENV%"
+    if errorlevel 1 (
+        echo [ERROR] Could not create Python virtual environment.
+        goto fail
+    )
+)
 pushd "%BACKEND%"
-python -c "import fastapi, sqlalchemy, alembic, celery, jose, passlib, redis" >nul 2>nul
+"%BACKEND_PYTHON%" -c "import fastapi, sqlalchemy, alembic, celery, jose, passlib, redis" >nul 2>nul
 if errorlevel 1 (
     echo Backend packages missing or incomplete. Installing requirements...
-    python -m pip install -r requirements.txt
+    "%BACKEND_PYTHON%" -m pip install -r requirements.txt
     if errorlevel 1 (
         echo [ERROR] Backend dependency installation failed.
         popd
@@ -119,27 +130,17 @@ if "%REDIS_READY%"=="0" (
 echo.
 echo [4/9] Running Alembic migrations...
 pushd "%BACKEND%"
-python -c "import os, sqlite3, sys; url=os.getenv('DATABASE_URL','sqlite:///./bridgeguard.db'); path=url[10:] if url.startswith('sqlite:///') else ''; tables=set(); versioned=False; (lambda c: (tables.update(r[0] for r in c.execute('select name from sqlite_master')), c.close()))(sqlite3.connect(path)) if path and os.path.exists(path) else None; (lambda c: (globals().__setitem__('versioned', any(c.execute('select version_num from alembic_version'))), c.close()))(sqlite3.connect(path)) if 'alembic_version' in tables else None; sys.exit(42 if 'users' in tables and not versioned else 0)"
+"%BACKEND_PYTHON%" -c "import os, sqlite3, sys; url=os.getenv('DATABASE_URL','sqlite:///./bridgeguard.db'); path=url[10:] if url.startswith('sqlite:///') else ''; tables=set(); versioned=False; (lambda c: (tables.update(r[0] for r in c.execute('select name from sqlite_master')), c.close()))(sqlite3.connect(path)) if path and os.path.exists(path) else None; (lambda c: (globals().__setitem__('versioned', any(c.execute('select version_num from alembic_version'))), c.close()))(sqlite3.connect(path)) if 'alembic_version' in tables else None; sys.exit(42 if 'users' in tables and not versioned else 0)"
 if errorlevel 42 (
     echo Existing SQLite schema has no Alembic version. Stamping pre-seed revision for v2 compatibility...
-    where alembic >nul 2>nul
-    if errorlevel 1 (
-        python -c "from alembic.config import main; main(argv=['stamp','20260520_0006'])"
-    ) else (
-        alembic stamp 20260520_0006
-    )
+    "%BACKEND_ALEMBIC%" stamp 20260520_0006
     if errorlevel 1 (
         echo [ERROR] Alembic stamp failed.
         popd
         goto fail
     )
 )
-where alembic >nul 2>nul
-if errorlevel 1 (
-    python -c "from alembic.config import main; main(argv=['upgrade','head'])"
-) else (
-    alembic upgrade head
-)
+"%BACKEND_ALEMBIC%" upgrade head
 if errorlevel 1 (
     echo [ERROR] Alembic migration failed.
     popd
@@ -169,14 +170,14 @@ if /I "%SKIP_FRONTEND_BUILD%"=="1" (
 echo.
 echo [6/9] Starting Celery worker...
 if "%REDIS_READY%"=="1" (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', 'title BridgeGuard Celery Worker && celery -A app.tasks worker --loglevel=info --pool=solo' -WorkingDirectory '%BACKEND%'"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', 'title BridgeGuard Celery Worker && %BACKEND_PYTHON% -m celery -A app.tasks worker --loglevel=info --pool=solo' -WorkingDirectory '%BACKEND%'"
 ) else (
     echo [WARN] Skipping Celery auto-start because Redis is unavailable.
 )
 
 echo.
 echo [7/9] Starting FastAPI backend...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', 'title BridgeGuard Backend API && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000' -WorkingDirectory '%BACKEND%'"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', 'title BridgeGuard Backend API && %BACKEND_PYTHON% -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000' -WorkingDirectory '%BACKEND%'"
 
 echo.
 echo [8/9] Starting frontend static server...

@@ -4,6 +4,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+*.egg-info/
+dist/
 decisions.json
 connectors.json
 *.db
@@ -16,6 +18,8 @@ frontend/build/
 *.log
 .env
 .env.*
+docker-compose.override.yml
+bridgeguard-frontend-v*.zip
 
 # OS/editor noise
 .DS_Store

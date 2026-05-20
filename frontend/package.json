@@ -39,5 +39,13 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7"
+  },
+  "overrides": {
+    "@tootallnate/once": "^3.0.1",
+    "nth-check": "^3.0.1",
+    "postcss": "^8.5.15",
+    "serialize-javascript": "^7.0.5",
+    "underscore": "^1.13.8",
+    "webpack-dev-server": "^5.2.4"
   }
 }
