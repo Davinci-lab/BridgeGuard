@@ -1,5 +1,10 @@
 # BridgeGuard
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Davinci-lab/BridgeGuard?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen?style=flat-square)
+![License](https://img.shields.io/github/license/Davinci-lab/BridgeGuard?style=flat-square)
+![Twitter](https://img.shields.io/twitter/follow/BridgeGuard_io?style=social)
+
 **Defensive runtime security kernel for cross-chain bridge systems.**
 
 BridgeGuard v2 is a local-first operator console and API for simulating bridge events, checking runtime invariants, scoring risk, and producing explainable decisions. It keeps the original v1 simulation endpoints intact while adding authentication, project isolation, event listeners, alerts, policy calibration, connector discovery, and signed compliance reports.
@@ -190,6 +195,12 @@ npm.cmd run build
 
 CI runs the same backend and frontend checks on push and pull request.
 
+## Who Is Using BridgeGuard?
+
+BridgeGuard is open for bridge operators, auditors, insurers, and DeFi security researchers evaluating runtime bridge monitoring.
+
+Using BridgeGuard in a pilot, audit workflow, research project, or insurance risk process? Open an issue or discussion to be listed here.
+
 ## Defensive Boundaries
 
 BridgeGuard is defensive-only:
@@ -237,4 +248,4 @@ The historical incident library is used only for defensive simulation and produc
 
 ## Status
 
-BridgeGuard v2.0.0 is a defensive research MVP. It is suitable for local demonstrations, internal review, and prototype operator workflows, but it is not an audited production security control.
+BridgeGuard v2.0.0 is a stable open-source defensive release for demonstrations, internal review, prototype operator workflows, and commercial evaluation. It is not a substitute for independent audits, bridge-specific threat modeling, or production incident response controls.
