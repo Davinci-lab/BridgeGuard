@@ -37,3 +37,8 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    alert_rules = relationship(
+        "AlertRule",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

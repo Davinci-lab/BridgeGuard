@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..connector_config import ConnectorConfig
 from ..connectors import ConnectorEngine
-from ..models import PolicyDecision, TransferSimulation
+from ..models import TransferSimulation
 from ..models.auth_models import Project
 from ..models.decision_models import DecisionRecord as DBDecisionRecord
 from ..models.listener_models import Listener
@@ -16,13 +16,13 @@ from ..policy_engine import decide
 
 
 logger = logging.getLogger(__name__)
-ALERT_DECISIONS = {PolicyDecision.FREEZE.value, PolicyDecision.ESCALATE_TO_GUARDIANS.value}
 
 
 def save_simulation_decision(
     db: Session,
     project_id: int,
     simulation: TransferSimulation,
+    enqueue_notifications: bool = False,
 ) -> DBDecisionRecord:
     decision, risk_score, violations, explanation, recommended = decide(simulation)
     record = DBDecisionRecord(
@@ -40,7 +40,7 @@ def save_simulation_decision(
     db.commit()
     db.refresh(record)
 
-    if record.decision in ALERT_DECISIONS:
+    if enqueue_notifications:
         queue_decision_notification(record.id)
 
     return record
@@ -75,7 +75,7 @@ def process_connector_event(
     event: dict,
 ) -> DBDecisionRecord:
     simulation = event_to_simulation(connector_config, event)
-    return save_simulation_decision(db, project_id, simulation)
+    return save_simulation_decision(db, project_id, simulation, enqueue_notifications=True)
 
 
 def poll_connector_once(
@@ -85,7 +85,7 @@ def poll_connector_once(
 ) -> DBDecisionRecord:
     result = ConnectorEngine.evaluate(connector_config)
     simulation = TransferSimulation(**result["simulation"])
-    return save_simulation_decision(db, project_id, simulation)
+    return save_simulation_decision(db, project_id, simulation, enqueue_notifications=True)
 
 
 def start_listener(

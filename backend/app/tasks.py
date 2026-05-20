@@ -19,6 +19,12 @@ def run_listener(listener_id: int) -> str:
 
 @celery_app.task(name="bridgeguard.send_decision_notification")
 def send_decision_notification(decision_id: str) -> str:
-    from .services.listener_service import log_decision_notification
+    from .database import SessionLocal
+    from .services.alert_service import dispatch_alerts_for_decision
 
-    return log_decision_notification(decision_id)
+    db = SessionLocal()
+    try:
+        sent = dispatch_alerts_for_decision(db, decision_id)
+        return f"sent {sent} alert notifications"
+    finally:
+        db.close()
