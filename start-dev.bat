@@ -148,11 +148,15 @@ if errorlevel 1 (
 popd
 
 echo.
-echo [5/9] Building frontend if needed...
-if exist "%FRONTEND%\build\index.html" (
-    echo frontend\build already exists. Skipping npm run build.
+echo [5/9] Building v2 frontend...
+if /I "%SKIP_FRONTEND_BUILD%"=="1" (
+    echo SKIP_FRONTEND_BUILD=1 set. Skipping npm run build.
 ) else (
     pushd "%FRONTEND%"
+    if exist "build" (
+        echo Removing stale frontend build output...
+        rmdir /S /Q "build"
+    )
     call npm.cmd run build
     if errorlevel 1 (
         echo [ERROR] Frontend build failed.

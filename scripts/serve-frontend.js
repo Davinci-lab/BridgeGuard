@@ -93,6 +93,12 @@ if (!fs.existsSync(path.join(buildDir, 'index.html'))) {
   process.exit(1);
 }
 
+const indexHtml = fs.readFileSync(path.join(buildDir, 'index.html'), 'utf8');
+if (indexHtml.includes('BridgeGuard MVP') || indexHtml.includes('/static/app.js')) {
+  console.error('Detected legacy v1 static bundle in frontend/build. Run npm.cmd run build from frontend before serving.');
+  process.exit(1);
+}
+
 http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://localhost:${port}`);
   if (isApiRequest(parsedUrl.pathname)) {
