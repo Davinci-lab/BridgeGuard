@@ -1,9 +1,6 @@
 # BridgeGuard
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Davinci-lab/BridgeGuard?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen?style=flat-square)
-![License](https://img.shields.io/github/license/Davinci-lab/BridgeGuard?style=flat-square)
-![Twitter](https://img.shields.io/twitter/follow/BridgeGuard_io?style=social)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Davinci-lab/BridgeGuard?style=flat-square) ![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen?style=flat-square) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![Twitter](https://img.shields.io/twitter/follow/BridgeGuard_io?style=social)
 
 **Defensive runtime security kernel for cross-chain bridge systems.**
 
@@ -220,6 +217,10 @@ The risk model is deterministic and explainable. v2 adds project-level weight ca
 
 See [RISK_MODEL.md](RISK_MODEL.md).
 
+## Commercial Use
+
+For enterprise features, managed hosting, or custom integrations, contact us at [email/website].
+
 ## Data Sources
 
 The historical incident library is used only for defensive simulation and product demonstration.
@@ -249,3 +250,7 @@ The historical incident library is used only for defensive simulation and produc
 ## Status
 
 BridgeGuard v2.0.0 is a stable open-source defensive release for demonstrations, internal review, prototype operator workflows, and commercial evaluation. It is not a substitute for independent audits, bridge-specific threat modeling, or production incident response controls.
+
+## License
+
+This project is licensed under the MIT License – see LICENSE file for details.
