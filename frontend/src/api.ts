@@ -2,6 +2,8 @@ import axios from 'axios';
 import {
     Attack,
     ConnectorConfig,
+    ConnectorDiscoveryRequest,
+    ConnectorDiscoveryResponse,
     ConnectorEvaluationResult,
     DecisionRecord,
     Metrics,
@@ -35,3 +37,5 @@ export const createConnector = (data: ConnectorConfig) => API.post<ConnectorConf
 export const updateConnector = (id: string, data: ConnectorConfig) => API.put<ConnectorConfig>(`/connectors/${id}`, data);
 export const deleteConnector = (id: string) => API.delete(`/connectors/${id}`);
 export const evaluateConnector = (id: string) => API.post<ConnectorEvaluationResult>(`/connectors/${id}/evaluate`);
+export const discoverConnector = (data: ConnectorDiscoveryRequest) =>
+    API.post<ConnectorDiscoveryResponse>('/api/v2/connectors/discover', data);

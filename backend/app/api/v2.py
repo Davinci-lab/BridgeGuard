@@ -1,10 +1,14 @@
 from datetime import datetime, timezone
 from typing import Annotated
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from ..connector_config import ConnectorConfig
+from ..connector_registry import ConnectorRegistry
+from ..connectors import ConnectorEngine
 from ..database import get_db
 from ..dependencies import get_current_project, get_current_user
 from ..models.alert_models import AlertRule
@@ -16,7 +20,13 @@ from ..schemas.v2.projects import ProjectCreate, ProjectRead
 from ..schemas.v2.simulation import DecisionRecordRead, PaginatedDecisions, TransferSimulation
 from ..schemas.v2.listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
 from ..services import alert_service
+from ..services.connector_discovery import (
+    ConnectorDiscoveryRequest,
+    ConnectorDiscoveryResponse,
+    discover_evm_connector,
+)
 from ..services.listener_service import save_simulation_decision, start_listener, stop_listener
+from ..storage_connectors import get_connector, load_connectors, save_connectors
 
 
 router = APIRouter(tags=["v2"])
@@ -46,6 +56,77 @@ def list_projects(
         .where(Project.owner_id == current_user.id)
         .order_by(Project.id)
     ).all()
+
+
+@router.get("/connectors", response_model=list[ConnectorConfig])
+def list_v2_connectors():
+    return load_connectors()
+
+
+@router.get("/connectors/types")
+def list_connector_types():
+    return {"types": ConnectorRegistry.supported_types()}
+
+
+@router.get("/connectors/discovered", response_model=list[ConnectorConfig])
+def list_discovered_connector_configs():
+    from pathlib import Path
+
+    return ConnectorRegistry.discover_from_config_files(
+        [
+            Path("connectors.json"),
+            Path(__file__).resolve().parents[1] / "sample_data" / "default_connectors.json",
+        ]
+    )
+
+
+@router.post("/connectors", response_model=ConnectorConfig, status_code=status.HTTP_201_CREATED)
+def create_v2_connector(config: ConnectorConfig):
+    config.id = str(uuid.uuid4())
+    connectors = load_connectors()
+    connectors.append(config)
+    save_connectors(connectors)
+    return config
+
+
+@router.put("/connectors/{connector_id}", response_model=ConnectorConfig)
+def update_v2_connector(connector_id: str, config: ConnectorConfig):
+    connectors = load_connectors()
+    for i, connector in enumerate(connectors):
+        if connector.id == connector_id:
+            config.id = connector_id
+            connectors[i] = config
+            save_connectors(connectors)
+            return config
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connector not found")
+
+
+@router.delete("/connectors/{connector_id}")
+def delete_v2_connector(connector_id: str):
+    connectors = load_connectors()
+    remaining = [connector for connector in connectors if connector.id != connector_id]
+    if len(remaining) == len(connectors):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connector not found")
+    save_connectors(remaining)
+    return {"status": "deleted"}
+
+
+@router.post("/connectors/{connector_id}/evaluate")
+def evaluate_v2_connector(connector_id: str):
+    try:
+        return ConnectorEngine.evaluate(get_connector(connector_id))
+    except KeyError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connector not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/connectors/discover", response_model=ConnectorDiscoveryResponse)
+def discover_v2_connector(payload: ConnectorDiscoveryRequest):
+    try:
+        return discover_evm_connector(payload)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/projects", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)

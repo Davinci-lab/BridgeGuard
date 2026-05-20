@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     createConnector,
     deleteConnector,
+    discoverConnector,
     evaluateConnector,
     fetchConnectorPresets,
     fetchConnectors,
@@ -38,6 +39,7 @@ const ConnectorManager: React.FC = () => {
     const [form, setForm] = useState<ConnectorConfig>(emptyConnector);
     const [abiText, setAbiText] = useState<string>('[]');
     const [configText, setConfigText] = useState<string>('');
+    const [discoveryKey, setDiscoveryKey] = useState<string>('');
     const [result, setResult] = useState<ConnectorEvaluationResult | null>(null);
     const [error, setError] = useState<string>('');
     const [status, setStatus] = useState<string>('');
@@ -71,6 +73,26 @@ const ConnectorManager: React.FC = () => {
             loadConnectors();
         } catch (err) {
             setError(err instanceof Error ? err.message : getApiErrorMessage(err));
+        }
+    };
+
+    const handleDiscover = async () => {
+        try {
+            const res = await discoverConnector({
+                chain_id: form.chain_id,
+                contract_address: form.contract_address,
+                api_key: discoveryKey.trim() || null,
+            });
+            setForm(prev => ({
+                ...prev,
+                abi: res.data.abi,
+                method_mapping: res.data.method_mapping,
+            }));
+            setAbiText(JSON.stringify(res.data.abi, null, 2));
+            setStatus(res.data.verified ? 'Discovery loaded verified ABI mapping.' : res.data.warning || 'No verified ABI found.');
+            setError('');
+        } catch (err) {
+            setError(getApiErrorMessage(err));
         }
     };
 
@@ -150,6 +172,15 @@ const ConnectorManager: React.FC = () => {
                         <input className="text-input" value={form.dest_chain} onChange={e => updateField('dest_chain', e.target.value)} placeholder="Destination chain" />
                     </div>
                     <textarea className="text-area" value={abiText} onChange={e => setAbiText(e.target.value)} rows={5} placeholder="Simplified ABI JSON" />
+                    <div className="controls-row">
+                        <input
+                            className="text-input"
+                            value={discoveryKey}
+                            onChange={e => setDiscoveryKey(e.target.value)}
+                            placeholder="Etherscan API key (optional)"
+                        />
+                        <button className="secondary-button" onClick={handleDiscover}>Auto-discover</button>
+                    </div>
                     <button className="primary-button" onClick={handleCreate}>{configText.trim() ? 'Import Connector JSON' : 'Create Connector'}</button>
                 </div>
 

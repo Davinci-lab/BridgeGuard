@@ -129,7 +129,7 @@ export interface AbiItem {
 export interface ConnectorConfig {
   id: string;
   name: string;
-  type: 'evm';
+  type: 'evm' | 'solana' | 'cosmos';
   enabled: boolean;
   rpc_url: string;
   chain_id: number;
@@ -153,4 +153,19 @@ export interface ConnectorEvaluationResult {
     explanation: string;
     recommended_action: string;
     warning?: string;
+}
+
+export interface ConnectorDiscoveryRequest {
+  chain_id: number;
+  contract_address: string;
+  api_key?: string | null;
+}
+
+export interface ConnectorDiscoveryResponse {
+  contract_address: string;
+  chain_id: number;
+  verified: boolean;
+  abi: AbiItem[];
+  method_mapping: EVMMethodMapping;
+  warning?: string | null;
 }

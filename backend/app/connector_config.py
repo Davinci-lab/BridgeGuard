@@ -15,11 +15,11 @@ class EVMMethodMapping(BaseModel):
 class ConnectorConfig(BaseModel):
     id: str = ""
     name: str
-    type: Literal["evm"] = "evm"
+    type: Literal["evm", "solana", "cosmos"] = "evm"
     enabled: bool = True
-    rpc_url: str
-    chain_id: int
-    contract_address: str
+    rpc_url: str = "mock://local"
+    chain_id: int = 1
+    contract_address: str = ""
     abi: list = Field(default_factory=list)
     method_mapping: EVMMethodMapping = Field(default_factory=EVMMethodMapping)
     # Additional caps can be set manually
