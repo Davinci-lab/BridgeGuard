@@ -1,4 +1,4 @@
-# CarthEdge BridgeGuard: A Runtime Security Kernel for Cross-Chain Bridges
+# BridgeGuard: A Runtime Security Kernel for Cross-Chain Bridges
 
 **Whitepaper v1.0**  
 *Davinci Lab*  
@@ -10,7 +10,7 @@ May 2026
 
 Cross-chain bridges have become the primary attack vector in decentralized finance, accounting for over $2.8 billion in losses since 2021. Existing security solutions—whether commercial monitoring platforms, academic frameworks, or simple integration tools—fail to provide **bridge-specific, explainable, and plug-and-play runtime protection**. They are either too generic, too opaque, or purely theoretical.
 
-**CarthEdge BridgeGuard** introduces a novel **runtime security kernel** purpose-built for cross-chain bridges. It models every bridge transfer as a state transition and verifies **14 accounting, governance, finality, and anomaly invariants** in real time. Its unique policy engine maps invariant violations to actionable, human-readable decisions: `ALLOW`, `DELAY`, `FREEZE`, `ESCALATE_TO_GUARDIANS`, or `REQUIRE_EXTRA_SIGNATURES`. Every decision is accompanied by a risk score, a complete set of reason codes, and a recommended action.
+**BridgeGuard** introduces a novel **runtime security kernel** purpose-built for cross-chain bridges. It models every bridge transfer as a state transition and verifies **14 accounting, governance, finality, and anomaly invariants** in real time. Its unique policy engine maps invariant violations to actionable, human-readable decisions: `ALLOW`, `DELAY`, `FREEZE`, `ESCALATE_TO_GUARDIANS`, or `REQUIRE_EXTRA_SIGNATURES`. Every decision is accompanied by a risk score, a complete set of reason codes, and a recommended action.
 
 BridgeGuard is **defensive-only**, **local-first**, and **open-source**, making it immediately auditable and deployable. Its **plug-and-play connector framework** allows any EVM-based bridge to be integrated in minutes by simply providing a contract address and an ABI—no code changes required. On a dataset of over 20 historical bridge attacks, BridgeGuard detects **100% of incidents** while maintaining zero false positives on normal transfer simulations. It is the first solution to combine **mathematical rigor, operational simplicity, and full explainability** in a single lightweight kernel.
 
@@ -306,7 +306,7 @@ BridgeGuard is an evolving platform. The following milestones will extend its ca
 
 ## 7. Conclusion
 
-Cross-chain bridges will remain prime targets as long as their security relies solely on pre-deployment audits and reactive monitoring. **CarthEdge BridgeGuard** introduces a new paradigm: a proactive, invariant-based runtime kernel that continuously verifies the mathematical safety of every transfer. Its unique combination of bridge-native invariants, explainable decisions, and plug-and-play connectors makes it the most performant and powerful bridge security solution available today.
+Cross-chain bridges will remain prime targets as long as their security relies solely on pre-deployment audits and reactive monitoring. **BridgeGuard** introduces a new paradigm: a proactive, invariant-based runtime kernel that continuously verifies the mathematical safety of every transfer. Its unique combination of bridge-native invariants, explainable decisions, and plug-and-play connectors makes it the most performant and powerful bridge security solution available today.
 
 BridgeGuard is open-source, defensive-only, and ready for immediate integration. We invite bridge operators, auditors, and the broader research community to adopt, test, and extend this foundational layer of cross-chain security.
 
