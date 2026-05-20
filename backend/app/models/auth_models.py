@@ -48,3 +48,8 @@ class Project(Base):
         cascade="all, delete-orphan",
         uselist=False,
     )
+    decision_reports = relationship(
+        "DecisionReport",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

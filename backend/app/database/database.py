@@ -29,5 +29,6 @@ def init_db():
     from ..models import decision_models  # noqa: F401
     from ..models import listener_models  # noqa: F401
     from ..models import policy_models  # noqa: F401
+    from ..models import report_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

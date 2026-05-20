@@ -2,6 +2,7 @@ from .alerts import AlertRuleCreate, AlertRuleRead, AlertRuleUpdate, AlertTestRe
 from .auth import RegisterRequest, TokenResponse, UserRead
 from .listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
 from .policy import CustomRule, PolicyConfigRead, PolicyConfigUpdate
+from .reports import DecisionReportRead, ReportVerifyRequest, ReportVerifyResponse
 from .projects import ProjectCreate, ProjectRead
 from .simulation import DecisionRecordRead, PaginatedDecisions, TransferSimulation
 
@@ -18,6 +19,9 @@ __all__ = [
     "CustomRule",
     "PolicyConfigRead",
     "PolicyConfigUpdate",
+    "DecisionReportRead",
+    "ReportVerifyRequest",
+    "ReportVerifyResponse",
     "ProjectCreate",
     "ProjectRead",
     "RegisterRequest",

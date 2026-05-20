@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
@@ -16,11 +16,13 @@ from ..models.auth_models import Project, User
 from ..models.decision_models import DecisionRecord as DBDecisionRecord
 from ..models.listener_models import Listener
 from ..models.policy_models import PolicyConfig
+from ..models.report_models import DecisionReport
 from ..schemas.v2.alerts import AlertRuleCreate, AlertRuleRead, AlertRuleUpdate, AlertTestResponse
 from ..schemas.v2.projects import ProjectCreate, ProjectRead
 from ..schemas.v2.simulation import DecisionRecordRead, PaginatedDecisions, TransferSimulation
 from ..schemas.v2.listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
 from ..schemas.v2.policy import PolicyConfigRead, PolicyConfigUpdate
+from ..schemas.v2.reports import ReportVerifyRequest, ReportVerifyResponse
 from ..services import alert_service
 from ..services.connector_discovery import (
     ConnectorDiscoveryRequest,
@@ -29,6 +31,7 @@ from ..services.connector_discovery import (
 )
 from ..services.listener_service import save_simulation_decision, start_listener, stop_listener
 from ..services.policy_service import get_effective_policy, upsert_policy_config
+from ..services.report_service import create_decision_report, verify_decision_signature
 from ..storage_connectors import get_connector, load_connectors, save_connectors
 
 
@@ -47,6 +50,16 @@ def get_owned_alert_rule(db: Session, project: Project, alert_id: int) -> AlertR
     if alert is None or alert.project_id != project.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert rule not found")
     return alert
+
+
+def get_owned_decision(db: Session, decision_id: str, current_user: User) -> DBDecisionRecord:
+    decision = db.get(DBDecisionRecord, decision_id)
+    if decision is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Decision not found")
+    project = db.get(Project, decision.project_id)
+    if project is None or project.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Decision not found")
+    return decision
 
 
 @router.get("/projects", response_model=list[ProjectRead])
@@ -156,6 +169,7 @@ def delete_project(
     db.execute(delete(AlertRule).where(AlertRule.project_id == project.id))
     db.execute(delete(Listener).where(Listener.project_id == project.id))
     db.execute(delete(PolicyConfig).where(PolicyConfig.project_id == project.id))
+    db.execute(delete(DecisionReport).where(DecisionReport.project_id == project.id))
     db.execute(delete(DBDecisionRecord).where(DBDecisionRecord.project_id == project.id))
     db.delete(project)
     db.commit()
@@ -195,6 +209,43 @@ def list_decisions(
     ).all()
 
     return PaginatedDecisions(items=items, total=total, limit=limit, offset=offset)
+
+
+@router.post("/decisions/{decision_id}/report")
+def create_decision_report_pdf(
+    decision_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    decision = get_owned_decision(db, decision_id, current_user)
+    report = create_decision_report(db, decision)
+    filename = f"bridgeguard-decision-{decision.id}.pdf"
+    return Response(
+        content=report.pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Report-ID": str(report.metadata.id),
+            "X-Report-Signature": report.metadata.signature,
+            "X-Report-SHA256": report.metadata.report_sha256,
+            "X-Signature-Algorithm": report.metadata.signature_algorithm,
+        },
+    )
+
+
+@router.post("/decisions/{decision_id}/report/verify", response_model=ReportVerifyResponse)
+def verify_decision_report_signature(
+    decision_id: str,
+    payload: ReportVerifyRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    decision = get_owned_decision(db, decision_id, current_user)
+    return ReportVerifyResponse(
+        valid=verify_decision_signature(decision, payload.signature),
+        decision_id=decision.id,
+        project_id=decision.project_id,
+    )
 
 
 @router.post(

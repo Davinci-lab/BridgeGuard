@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
-from app.models import alert_models, auth_models, decision_models, listener_models, policy_models  # noqa: F401
+from app.models import alert_models, auth_models, decision_models, listener_models, policy_models, report_models  # noqa: F401
 
 
 @pytest.fixture
