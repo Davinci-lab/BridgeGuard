@@ -8,15 +8,15 @@ jobs:
         image: redis:alpine
         ports: ['6379:6379']
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with: { python-version: '3.11' }
       - run: pip install -r backend/requirements.txt
       - run: cd backend && alembic upgrade head && python -m pytest tests
   frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with: { node-version: '18' }
-      - run: cd frontend && npm install && npm run build
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with: { node-version: '22' }
+      - run: cd frontend && npm ci && npm exec tsc -- --noEmit --skipLibCheck && npm run build
