@@ -1,6 +1,4 @@
-from datetime import datetime, timezone
 from typing import Annotated
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select
@@ -10,9 +8,11 @@ from ..database import get_db
 from ..dependencies import get_current_project, get_current_user
 from ..models.auth_models import Project, User
 from ..models.decision_models import DecisionRecord as DBDecisionRecord
-from ..policy_engine import decide
+from ..models.listener_models import Listener
 from ..schemas.v2.projects import ProjectCreate, ProjectRead
 from ..schemas.v2.simulation import DecisionRecordRead, PaginatedDecisions, TransferSimulation
+from ..schemas.v2.listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
+from ..services.listener_service import save_simulation_decision, start_listener, stop_listener
 
 
 router = APIRouter(tags=["v2"])
@@ -53,6 +53,7 @@ def delete_project(
     if project is None or project.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
+    db.execute(delete(Listener).where(Listener.project_id == project.id))
     db.execute(delete(DBDecisionRecord).where(DBDecisionRecord.project_id == project.id))
     db.delete(project)
     db.commit()
@@ -66,25 +67,9 @@ def simulate_transfer_v2(
     db: Annotated[Session, Depends(get_db)],
 ):
     try:
-        decision, risk_score, violations, explanation, recommended = decide(sim)
+        return save_simulation_decision(db, project.id, sim)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-    record = DBDecisionRecord(
-        id=str(uuid.uuid4()),
-        timestamp=datetime.now(timezone.utc),
-        simulation=sim.model_dump(mode="json"),
-        decision=decision.value,
-        risk_score=risk_score,
-        reason_codes=[reason.value for reason in violations],
-        explanation=explanation,
-        recommended_action=recommended,
-        project_id=project.id,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return record
 
 
 @router.get("/decisions", response_model=PaginatedDecisions)
@@ -108,3 +93,36 @@ def list_decisions(
     ).all()
 
     return PaginatedDecisions(items=items, total=total, limit=limit, offset=offset)
+
+
+@router.post(
+    "/projects/{project_id}/listeners/start",
+    response_model=ListenerRead,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def start_project_listener(
+    project_id: int,
+    payload: ListenerStartRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    project = db.get(Project, project_id)
+    if project is None or project.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    return start_listener(db, project, payload.connector, payload.mode)
+
+
+@router.post("/projects/{project_id}/listeners/stop", response_model=list[ListenerRead])
+def stop_project_listener(
+    project_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    payload: ListenerStopRequest = ListenerStopRequest(),
+):
+    project = db.get(Project, project_id)
+    if project is None or project.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    listeners = stop_listener(db, project, payload.connector_id)
+    if payload.connector_id and not listeners:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listener not found")
+    return listeners

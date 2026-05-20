@@ -6,11 +6,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
-from app.models import auth_models, decision_models  # noqa: F401
+from app.models import auth_models, decision_models, listener_models  # noqa: F401
 
 
 @pytest.fixture
-def client():
+def db_session_factory():
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -18,9 +18,25 @@ def client():
     )
     testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
+    try:
+        yield testing_session_local
+    finally:
+        Base.metadata.drop_all(bind=engine)
 
+
+@pytest.fixture
+def db_session(db_session_factory):
+    db = db_session_factory()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture
+def client(db_session_factory):
     def override_get_db():
-        db = testing_session_local()
+        db = db_session_factory()
         try:
             yield db
         finally:
@@ -34,4 +50,3 @@ def client():
     finally:
         test_client.close()
         app.dependency_overrides.clear()
-        Base.metadata.drop_all(bind=engine)

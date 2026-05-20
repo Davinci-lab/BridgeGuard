@@ -32,3 +32,8 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    listeners = relationship(
+        "Listener",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
