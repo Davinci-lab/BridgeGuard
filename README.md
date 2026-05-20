@@ -2,188 +2,210 @@
 
 **Defensive runtime security kernel for cross-chain bridge systems.**
 
-BridgeGuard is a local-first research MVP that simulates bridge events, checks runtime invariants, computes risk scores, and returns explainable policy decisions. It is designed for bridge operators, guardians, auditors, insurers, and security researchers who need a clear demo of runtime verification beyond static audits.
+BridgeGuard v2 is a local-first operator console and API for simulating bridge events, checking runtime invariants, scoring risk, and producing explainable decisions. It keeps the original v1 simulation endpoints intact while adding authentication, project isolation, event listeners, alerts, policy calibration, connector discovery, and signed compliance reports.
 
-## Current MVP
+## v2 Feature Set
 
-- FastAPI backend with deterministic policy, invariant, and risk engines.
-- Dark dashboard UI for incident replay, decision explanations, reason codes, history, and connector testing.
-- 19 historical bridge incident scenarios with public references.
-- Plug-and-play local connector configuration for read-only EVM bridge evaluation.
-- Local `start-dev.bat` launcher for backend, frontend, tests, and health checks.
+- Authenticated FastAPI v2 API with JWT login/register and `/api/v2/auth/me`.
+- Project-scoped multi-tenancy for simulations, decisions, alerts, listeners, policy configs, and reports.
+- Project dashboard with recent decisions, alert status, listener status, and v2 simulation flow.
+- Multi-chain connector framework with EVM, Solana, and Cosmos connector types.
+- EVM auto-discovery endpoint for verified ABI method mapping suggestions.
+- Celery/Redis listener foundation for polling or websocket connector events.
+- Slack, email, and webhook alert rules for risky decisions.
+- Policy calibration with risk weights and custom expression rules.
+- PDF decision reports with digital signature verification.
+- TailwindCSS/shadcn-style frontend components.
+- Docker Compose stack for PostgreSQL, Redis, backend, Celery worker, and Nginx frontend.
+- GitHub Actions workflow for backend pytest and frontend type-check/build.
 
-## What It Is
+## Backward Compatibility
 
-- A defensive monitoring and decision-support prototype.
-- A runtime invariant-checking layer for mint-lock, burn-release, flow, cap, finality, signer, governance, replay, TVL divergence, and emergency-state risks.
-- A historical incident replay system for client demos and regression tests.
-- A local connector manager that can store read-only bridge configurations in `connectors.json`.
+The original v1 API is intentionally preserved:
 
-## What It Is Not
-
-- Not a bridge, relayer, wallet, or transaction execution system.
-- Not an exploit toolkit.
-- Not an audited production security control.
-- Not a guarantee of bridge safety.
-- Not a private-key manager and not a transaction signer.
-
-## Policy Decisions
-
-BridgeGuard maps detected runtime conditions to:
-
-- `ALLOW`
-- `DELAY`
-- `FREEZE`
-- `ESCALATE_TO_GUARDIANS`
-- `REQUIRE_EXTRA_SIGNATURES`
-
-Each decision includes a risk score, reason codes, explanation, and recommended defensive action.
+- Root v1 endpoints still work, including `/health`, `/simulate`, `/simulate-attack/{name}`, `/decisions`, `/metrics`, `/reason-codes`, and `/connectors`.
+- The same v1 routes are also available under `/api/v1`.
+- v2 routes live under `/api/v2` and require auth for project-scoped operations.
+- The frontend keeps a **v1 Tools** section for historical replay, risk metrics, old connector storage, recent v1 decisions, and reason-code reference.
+- Existing local `backend/connectors.json` files continue to work with old connector endpoints.
 
 ## Quick Start
 
-From the repository root:
+The fastest path is Docker:
 
 ```powershell
-start-dev.bat
+docker compose up --build
 ```
-
-The launcher verifies dependencies, optionally runs backend tests, builds the lightweight frontend bundle, starts the backend, starts the frontend server, and performs health checks.
 
 Open:
 
-- Frontend dashboard: `http://localhost:3000`
-- Backend health: `http://127.0.0.1:8000/health`
-- API docs: `http://127.0.0.1:8000/docs`
+- Frontend: `http://localhost:3000`
+- Backend health: `http://localhost:8000/health`
+- API docs: `http://localhost:8000/docs`
 
-## Backend
+The Alembic seed migration creates a demo account:
+
+```text
+Email: demo@bridgeguard.local
+Password: bridgeguard-demo
+Project: Demo Bridge Operations
+```
+
+For a guided walkthrough, see [QUICKSTART.md](QUICKSTART.md).
+
+## Docker Setup
+
+The Compose stack includes:
+
+- `db`: PostgreSQL 16
+- `redis`: Redis 7
+- `backend`: FastAPI with Alembic migrations on startup
+- `celery`: BridgeGuard worker for listener and alert tasks
+- `frontend`: Nginx serving the production React build and proxying API routes
+
+Useful commands:
+
+```powershell
+docker compose up --build
+docker compose ps
+docker compose logs -f backend
+docker compose down
+```
+
+To reset the database volume:
+
+```powershell
+docker compose down -v
+docker compose up --build
+```
+
+## Manual Setup
+
+Backend:
 
 ```powershell
 cd backend
 python -m pip install -r requirements.txt
+alembic upgrade head
 python -m pytest tests
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Expected current test result:
-
-```text
-18 passed
-```
-
-By default, CORS allows browser requests only from:
-
-- `http://localhost:3000`
-- `http://127.0.0.1:3000`
-
-Override for local experiments:
-
-```powershell
-set ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-```
-
-## Frontend
+Frontend:
 
 ```powershell
 cd frontend
+npm install
+npm.cmd exec tsc -- --noEmit
 npm.cmd run build
+npm start
 ```
 
-The current demo build uses `scripts/build-frontend.js`, a lightweight local bundle generator used to avoid `react-scripts` instability under newer Node versions. The source React/TypeScript UI remains in `frontend/src`.
-
-Optional TypeScript check:
+Optional local services for v2 listener/alert workflows:
 
 ```powershell
-npm.cmd exec tsc -- --noEmit --skipLibCheck
+redis-server
+cd backend
+celery -A app.tasks.celery_app worker --loglevel=info
 ```
 
-## Example API Calls
+Environment variables:
 
-Health:
+```text
+DATABASE_URL=sqlite:///./bridgeguard.db
+DATABASE_URL=postgresql://bridgeguard:bridgeguard@localhost:5432/bridgeguard
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/1
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+SECRET_KEY=change-this-in-real-deployments
+```
+
+## API Overview
+
+v1 examples:
 
 ```powershell
 curl http://127.0.0.1:8000/health
-```
-
-Historical incidents:
-
-```powershell
 curl http://127.0.0.1:8000/attacks
-```
-
-Replay Ronin:
-
-```powershell
 curl -X POST "http://127.0.0.1:8000/simulate-attack/Ronin%20Bridge"
 ```
 
-Replay Socket/Bungee:
+v2 auth:
 
 ```powershell
-curl -X POST "http://127.0.0.1:8000/simulate-attack/Socket%2FBungee"
+curl -X POST http://127.0.0.1:8000/api/v2/auth/register `
+  -H "Content-Type: application/json" `
+  -d "{\"email\":\"operator@example.com\",\"password\":\"bridgeguard-demo\",\"project_name\":\"Ops\"}"
+
+curl -X POST http://127.0.0.1:8000/api/v2/auth/login `
+  -H "Content-Type: application/x-www-form-urlencoded" `
+  -d "username=operator@example.com&password=bridgeguard-demo"
 ```
 
-## Plug-and-Play Connectors
+v2 project-scoped requests use:
 
-The Connectors panel lets users create local read-only EVM connector configurations and evaluate them through the same policy engine.
+```text
+Authorization: Bearer <token>
+X-Project-ID: <project_id>
+```
 
-Connector data is stored locally in:
+## Connectors
+
+BridgeGuard supports a connector registry with:
+
+- EVM connector
+- Solana connector mock
+- Cosmos connector mock
+- Config-file discovery
+- Etherscan ABI discovery through `POST /api/v2/connectors/discover`
+
+Default demo connector configs are stored in:
+
+```text
+backend/app/sample_data/default_connectors.json
+```
+
+User-created legacy connectors are stored in:
 
 ```text
 backend/connectors.json
 ```
 
-This file is intentionally ignored by Git.
+## Testing
 
-Two demo presets are shipped in `backend/app/sample_data/default_connectors.json` and can be loaded from the dashboard with **Load preset connectors**:
+Backend:
 
-- Wormhole Sepolia (ETH)
-- Axelar Gateway (Sepolia)
-
-For local demos, use:
-
-```json
-{
-  "name": "Demo EVM Bridge",
-  "type": "evm",
-  "enabled": true,
-  "rpc_url": "mock://local",
-  "chain_id": 1,
-  "contract_address": "0x0000000000000000000000000000000000000000",
-  "abi": [],
-  "method_mapping": {
-    "locked_collateral": "totalLocked",
-    "minted_supply": "totalMinted",
-    "burned_proven": "totalBurned",
-    "released_supply": "totalReleased"
-  },
-  "daily_cap": 1000000,
-  "route_cap": 500000,
-  "asset_cap": 2000000,
-  "source_chain": "Ethereum",
-  "dest_chain": "Arbitrum",
-  "asset": "ETH",
-  "finality_blocks": 10
-}
+```powershell
+cd backend
+python -m pytest tests
 ```
 
-If `web3` is installed and a real RPC is configured, BridgeGuard attempts read-only method calls. If the RPC is unavailable, it returns a safe mock evaluation with a warning instead of crashing.
+Frontend:
+
+```powershell
+cd frontend
+npm.cmd exec tsc -- --noEmit
+npm.cmd run build
+```
+
+CI runs the same backend and frontend checks on push and pull request.
 
 ## Defensive Boundaries
 
-BridgeGuard must remain defensive-only:
+BridgeGuard is defensive-only:
 
-- no private keys;
-- no transaction signing;
-- no exploit payloads;
-- no live fund movement;
-- no guarantee of absolute security;
-- no proprietary internal bridge logic exposed.
+- no private keys
+- no transaction signing
+- no exploit payloads
+- no live fund movement
+- no guarantee of absolute security
+- no proprietary internal bridge logic exposed
 
 See [SECURITY.md](SECURITY.md) for reporting guidance and safe-use notice.
 
 ## Risk Model
 
-The current risk model is heuristic and deterministic. Weights are fixed for demo and testing purposes, and must be calibrated with real operational data before any production deployment.
+The risk model is deterministic and explainable. v2 adds project-level weight calibration and custom expression rules, but operators must calibrate with real operational data before any production use.
 
 See [RISK_MODEL.md](RISK_MODEL.md).
 
@@ -213,17 +235,6 @@ The historical incident library is used only for defensive simulation and produc
 | Verus Ethereum Bridge | https://blockchain.news/verus-ethereum-bridge-exploited |
 | NoOnes Solana Bridge | https://www.gate.com/news/noones-8m-cross-chain-bridge-exploit |
 
-## Repository Hygiene
+## Status
 
-Ignored local artifacts include:
-
-- Python caches and `.pytest_cache`
-- `frontend/node_modules`
-- `frontend/build`
-- `backend/decisions.json`
-- `backend/connectors.json`
-- logs and local environment files
-
-## License / Status
-
-BridgeGuard v1.0 is a defensive research MVP. It is suitable for local demonstrations, internal review, and investor/prospect discussions, but it is not production-grade bridge security.
+BridgeGuard v2.0.0 is a defensive research MVP. It is suitable for local demonstrations, internal review, and prototype operator workflows, but it is not an audited production security control.
