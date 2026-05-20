@@ -15,22 +15,22 @@ const ReasonCodesTable: React.FC = () => {
     }, []);
 
     return (
-        <section className="card">
-            <h2 className="section-title">Reason Code Reference</h2>
-            <p className="section-subtitle">Every policy decision is backed by one or more explainable defensive signals.</p>
-            {error && <p className="error">{error}</p>}
-            <table className="reason-table">
+        <section className="space-y-4 rounded-lg border bg-card p-5">
+            <h2 className="text-lg font-semibold">Reason Code Reference</h2>
+            <p className="text-sm text-muted-foreground">Every policy decision is backed by one or more explainable defensive signals.</p>
+            {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+            <table className="w-full border-collapse text-sm">
                 <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Description</th>
+                    <tr className="border-b">
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">Code</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     {Object.entries(codes).map(([code, desc]) => (
-                        <tr key={code}>
-                            <td><strong>{code}</strong></td>
-                            <td>{desc}</td>
+                        <tr className="border-b last:border-0" key={code}>
+                            <td className="px-3 py-2 align-top"><strong>{code}</strong></td>
+                            <td className="px-3 py-2 text-muted-foreground">{desc}</td>
                         </tr>
                     ))}
                 </tbody>

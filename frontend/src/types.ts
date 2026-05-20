@@ -72,6 +72,31 @@ export interface DecisionRecord {
     explanation: string;
     recommended_action: string;
     simulation: TransferSimulation;
+    project_id?: number;
+}
+
+export interface User {
+    id: number;
+    email: string;
+    is_active: boolean;
+}
+
+export interface AuthToken {
+    access_token: string;
+    token_type: string;
+}
+
+export interface Project {
+    id: number;
+    name: string;
+    owner_id: number;
+}
+
+export interface PaginatedDecisions {
+    items: DecisionRecord[];
+    total: number;
+    limit: number;
+    offset: number;
 }
 
 export interface RiskScoreDistribution {
@@ -169,4 +194,52 @@ export interface ConnectorDiscoveryResponse {
   abi: AbiItem[];
   method_mapping: EVMMethodMapping;
   warning?: string | null;
+}
+
+export type AlertCondition = 'decision_not_allow' | 'risk_score_gt';
+export type AlertChannel = 'slack' | 'email' | 'webhook';
+
+export interface AlertRule {
+    id: number;
+    project_id: number;
+    condition: AlertCondition;
+    threshold?: number | null;
+    channel_type: AlertChannel;
+    config: Record<string, unknown>;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AlertRulePayload {
+    condition: AlertCondition;
+    threshold?: number | null;
+    channel_type: AlertChannel;
+    config: Record<string, unknown>;
+    is_active: boolean;
+}
+
+export interface ListenerRecord {
+    id: number;
+    project_id: number;
+    connector_id: string;
+    status: string;
+    mode: 'polling' | 'websocket' | string;
+    task_id?: string | null;
+    connector_config: Record<string, unknown>;
+    last_error?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CustomRule {
+    name: string;
+    condition: string;
+    reason_code: string;
+}
+
+export interface PolicyConfig {
+    project_id: number;
+    risk_weights: Record<string, number>;
+    custom_rules: CustomRule[];
 }

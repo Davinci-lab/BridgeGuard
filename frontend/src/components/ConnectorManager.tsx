@@ -140,62 +140,62 @@ const ConnectorManager: React.FC = () => {
     };
 
     return (
-        <section className="card connector-manager">
-            <h2 className="section-title">Plug-and-Play Connectors</h2>
-            <p className="section-subtitle">
+        <section className="space-y-4 rounded-lg border bg-card p-5">
+            <h2 className="text-lg font-semibold">Plug-and-Play Connectors</h2>
+            <p className="text-sm text-muted-foreground">
                 Configure local EVM bridge read-only connectors and evaluate them through the same defensive policy engine.
             </p>
-            <div className="controls-row connector-toolbar">
-                <button className="secondary-button" onClick={handleLoadPresets}>Load preset connectors</button>
-                <button className="secondary-button" onClick={loadConnectors}>Refresh</button>
+            <div className="flex flex-wrap gap-3">
+                <button className="rounded-md border bg-white px-4 py-2 text-sm font-medium" onClick={handleLoadPresets}>Load preset connectors</button>
+                <button className="rounded-md border bg-white px-4 py-2 text-sm font-medium" onClick={loadConnectors}>Refresh</button>
             </div>
 
-            {error && <p className="error">{error}</p>}
-            {status && <p className="status-message">{status}</p>}
+            {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+            {status && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{status}</p>}
 
-            <div className="connector-grid">
-                <div className="connector-form">
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
+                <div className="space-y-3">
                     <textarea
-                        className="text-area"
+                        className="min-h-32 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
                         value={configText}
                         onChange={e => setConfigText(e.target.value)}
                         rows={8}
                         placeholder="Paste a full ConnectorConfig JSON here, or use the fields below."
                     />
-                    <input className="text-input" value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="Connector name" />
-                    <input className="text-input" value={form.rpc_url} onChange={e => updateField('rpc_url', e.target.value)} placeholder="RPC URL" />
-                    <input className="text-input" value={form.contract_address} onChange={e => updateField('contract_address', e.target.value)} placeholder="Contract address" />
-                    <div className="compact-grid">
-                        <input className="text-input" type="number" value={form.chain_id} onChange={e => updateField('chain_id', Number(e.target.value))} placeholder="Chain ID" />
-                        <input className="text-input" value={form.asset} onChange={e => updateField('asset', e.target.value)} placeholder="Asset" />
-                        <input className="text-input" value={form.source_chain} onChange={e => updateField('source_chain', e.target.value)} placeholder="Source chain" />
-                        <input className="text-input" value={form.dest_chain} onChange={e => updateField('dest_chain', e.target.value)} placeholder="Destination chain" />
+                    <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="Connector name" />
+                    <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={form.rpc_url} onChange={e => updateField('rpc_url', e.target.value)} placeholder="RPC URL" />
+                    <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={form.contract_address} onChange={e => updateField('contract_address', e.target.value)} placeholder="Contract address" />
+                    <div className="grid gap-3 md:grid-cols-4">
+                        <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" type="number" value={form.chain_id} onChange={e => updateField('chain_id', Number(e.target.value))} placeholder="Chain ID" />
+                        <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={form.asset} onChange={e => updateField('asset', e.target.value)} placeholder="Asset" />
+                        <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={form.source_chain} onChange={e => updateField('source_chain', e.target.value)} placeholder="Source chain" />
+                        <input className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={form.dest_chain} onChange={e => updateField('dest_chain', e.target.value)} placeholder="Destination chain" />
                     </div>
-                    <textarea className="text-area" value={abiText} onChange={e => setAbiText(e.target.value)} rows={5} placeholder="Simplified ABI JSON" />
-                    <div className="controls-row">
+                    <textarea className="min-h-28 w-full rounded-md border border-input bg-white px-3 py-2 text-sm" value={abiText} onChange={e => setAbiText(e.target.value)} rows={5} placeholder="Simplified ABI JSON" />
+                    <div className="flex flex-wrap gap-3">
                         <input
-                            className="text-input"
+                            className="h-10 min-w-64 flex-1 rounded-md border border-input bg-white px-3 text-sm"
                             value={discoveryKey}
                             onChange={e => setDiscoveryKey(e.target.value)}
                             placeholder="Etherscan API key (optional)"
                         />
-                        <button className="secondary-button" onClick={handleDiscover}>Auto-discover</button>
+                        <button className="rounded-md border bg-white px-4 py-2 text-sm font-medium" onClick={handleDiscover}>Auto-discover</button>
                     </div>
-                    <button className="primary-button" onClick={handleCreate}>{configText.trim() ? 'Import Connector JSON' : 'Create Connector'}</button>
+                    <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground" onClick={handleCreate}>{configText.trim() ? 'Import Connector JSON' : 'Create Connector'}</button>
                 </div>
 
-                <div className="connector-list">
+                <div className="space-y-3">
                     {connectors.length === 0 ? (
-                        <p className="muted">No connectors configured yet. Create a mock connector to test the workflow.</p>
+                        <p className="text-sm text-muted-foreground">No connectors configured yet. Create a mock connector to test the workflow.</p>
                     ) : connectors.map(connector => (
-                        <article className="history-card" key={connector.id}>
+                        <article className="space-y-2 rounded-lg border bg-white p-4" key={connector.id}>
                             <strong>{connector.name}</strong>
-                            <p>{connector.source_chain} to {connector.dest_chain} | {connector.asset}</p>
-                            <p>Chain ID: {connector.chain_id}</p>
-                            <p className="connector-address">{connector.contract_address}</p>
-                            <div className="controls-row">
-                                <button className="secondary-button" onClick={() => handleEvaluate(connector.id)}>Evaluate</button>
-                                <button className="secondary-button danger-button" onClick={() => handleDelete(connector.id)}>Delete</button>
+                            <p className="text-sm text-muted-foreground">{connector.source_chain} to {connector.dest_chain} | {connector.asset}</p>
+                            <p className="text-sm">Chain ID: {connector.chain_id}</p>
+                            <p className="break-all text-xs text-muted-foreground">{connector.contract_address}</p>
+                            <div className="flex flex-wrap gap-2">
+                                <button className="rounded-md border bg-white px-3 py-2 text-sm font-medium" onClick={() => handleEvaluate(connector.id)}>Evaluate</button>
+                                <button className="rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground" onClick={() => handleDelete(connector.id)}>Delete</button>
                             </div>
                         </article>
                     ))}
@@ -203,14 +203,14 @@ const ConnectorManager: React.FC = () => {
             </div>
 
             {result && (
-                <article className="text-panel connector-result">
-                    <h4>Connector Evaluation Result</h4>
-                    <p><strong>Decision:</strong> {result.decision}</p>
-                    <p><strong>Risk score:</strong> {result.risk_score.toFixed(1)}</p>
-                    <div className="badge-list">
-                        {result.reason_codes.map(code => <span className="badge" key={code}>{code}</span>)}
+                <article className="space-y-3 rounded-lg border bg-muted/50 p-4">
+                    <h4 className="font-semibold">Connector Evaluation Result</h4>
+                    <p className="text-sm"><strong>Decision:</strong> {result.decision}</p>
+                    <p className="text-sm"><strong>Risk score:</strong> {result.risk_score.toFixed(1)}</p>
+                    <div className="flex flex-wrap gap-2">
+                        {result.reason_codes.map(code => <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium" key={code}>{code}</span>)}
                     </div>
-                    {result.warning && <p className="muted">{result.warning}</p>}
+                    {result.warning && <p className="text-sm text-muted-foreground">{result.warning}</p>}
                 </article>
             )}
         </section>
