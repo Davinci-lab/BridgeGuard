@@ -1,4 +1,5 @@
 from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .models import TransferSimulation, DecisionRecord, Attack, Metrics
 from .policy_engine import decide
@@ -8,7 +9,8 @@ from .reason_codes import REASON_DESCRIPTIONS, ReasonCode
 from datetime import datetime
 from .api.auth import router as auth_router
 from .api.v2 import router as bridgeguard_v2_router
-from .database import init_db
+from .database import get_db, init_db
+from .dependencies import validate_api_key
 from .routes_connectors import router as connectors_router
 import uuid
 import os
@@ -30,6 +32,58 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+PREMIUM_API_KEY_PATHS = {
+    "/api/v2/connectors/discover",
+}
+
+
+def is_premium_api_key_path(path: str) -> bool:
+    return (
+        path in PREMIUM_API_KEY_PATHS
+        or (path.startswith("/api/v2/connectors/") and path.endswith("/evaluate"))
+    )
+
+
+def extract_project_id(request) -> int | None:
+    raw_project_id = request.headers.get("X-Project-ID") or request.query_params.get("project_id")
+    if raw_project_id is None:
+        return None
+    try:
+        return int(raw_project_id)
+    except ValueError:
+        return None
+
+
+def open_request_db(request):
+    db_provider = request.app.dependency_overrides.get(get_db, get_db)
+    db_generator = db_provider()
+    return next(db_generator), db_generator
+
+
+@app.middleware("http")
+async def premium_api_key_middleware(request, call_next):
+    if not is_premium_api_key_path(request.url.path):
+        return await call_next(request)
+
+    db, db_generator = open_request_db(request)
+    try:
+        key_record = validate_api_key(
+            request.headers.get("X-API-Key"),
+            db,
+            extract_project_id(request),
+        )
+    finally:
+        db_generator.close()
+
+    if key_record is None:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Valid X-API-Key header required for this premium endpoint"},
+        )
+
+    return await call_next(request)
 
 attacks = load_attacks()
 normal_flows = load_normal_flows()

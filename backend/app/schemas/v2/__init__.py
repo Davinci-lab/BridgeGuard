@@ -1,4 +1,5 @@
 from .alerts import AlertRuleCreate, AlertRuleRead, AlertRuleUpdate, AlertTestResponse
+from .api_keys import ApiKeyCreate, ApiKeyRead
 from .auth import RegisterRequest, TokenResponse, UserRead
 from .listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
 from .policy import CustomRule, PolicyConfigRead, PolicyConfigUpdate
@@ -12,6 +13,8 @@ __all__ = [
     "AlertRuleRead",
     "AlertRuleUpdate",
     "AlertTestResponse",
+    "ApiKeyCreate",
+    "ApiKeyRead",
     "PaginatedDecisions",
     "ListenerRead",
     "ListenerStartRequest",

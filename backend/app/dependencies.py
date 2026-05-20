@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from .database import get_db
 from .models.auth_models import Project, User
+from .models.payment_models import ApiKey
 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "bridgeguard-dev-secret-change-me")
@@ -65,3 +66,44 @@ def get_current_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     return project
+
+
+def get_admin_emails() -> set[str]:
+    raw_emails = os.getenv("BRIDGEGUARD_ADMIN_EMAILS", "demo@bridgeguard.local")
+    return {
+        email.strip().lower()
+        for email in raw_emails.split(",")
+        if email.strip()
+    }
+
+
+def require_admin_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    if current_user.email.lower() not in get_admin_emails():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_user
+
+
+def validate_api_key(
+    api_key: str | None,
+    db: Session,
+    project_id: int | None = None,
+) -> ApiKey | None:
+    if not api_key:
+        return None
+
+    key_record = db.query(ApiKey).filter(
+        ApiKey.key == api_key,
+        ApiKey.is_active.is_(True),
+    ).first()
+    if key_record is None:
+        return None
+
+    if project_id is not None and key_record.project_id != project_id:
+        return None
+
+    return key_record

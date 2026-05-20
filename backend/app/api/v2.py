@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import Annotated
+import secrets
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -10,14 +11,16 @@ from ..connector_config import ConnectorConfig
 from ..connector_registry import ConnectorRegistry
 from ..connectors import ConnectorEngine
 from ..database import get_db
-from ..dependencies import get_current_project, get_current_user
+from ..dependencies import get_current_project, get_current_user, require_admin_user
 from ..models.alert_models import AlertRule
 from ..models.auth_models import Project, User
 from ..models.decision_models import DecisionRecord as DBDecisionRecord
 from ..models.listener_models import Listener
+from ..models.payment_models import ApiKey
 from ..models.policy_models import PolicyConfig
 from ..models.report_models import DecisionReport
 from ..schemas.v2.alerts import AlertRuleCreate, AlertRuleRead, AlertRuleUpdate, AlertTestResponse
+from ..schemas.v2.api_keys import ApiKeyCreate, ApiKeyRead
 from ..schemas.v2.projects import ProjectCreate, ProjectRead
 from ..schemas.v2.simulation import DecisionRecordRead, PaginatedDecisions, TransferSimulation
 from ..schemas.v2.listeners import ListenerRead, ListenerStartRequest, ListenerStopRequest
@@ -72,6 +75,32 @@ def list_projects(
         .where(Project.owner_id == current_user.id)
         .order_by(Project.id)
     ).all()
+
+
+@router.post("/api-keys", response_model=ApiKeyRead, status_code=status.HTTP_201_CREATED)
+def create_api_key(
+    payload: ApiKeyCreate,
+    admin_user: Annotated[User, Depends(require_admin_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    project = get_owned_project(db, payload.project_id, admin_user)
+
+    while True:
+        raw_key = f"bg_live_{secrets.token_urlsafe(32)}"
+        existing = db.scalar(select(ApiKey).where(ApiKey.key == raw_key))
+        if existing is None:
+            break
+
+    api_key = ApiKey(
+        key=raw_key,
+        plan=payload.plan,
+        is_active=True,
+        project_id=project.id,
+    )
+    db.add(api_key)
+    db.commit()
+    db.refresh(api_key)
+    return api_key
 
 
 @router.get("/connectors", response_model=list[ConnectorConfig])
