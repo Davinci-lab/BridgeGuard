@@ -9,6 +9,8 @@ const backendHost = process.env.BACKEND_HOST || '127.0.0.1';
 const backendPort = Number(process.env.BACKEND_PORT || 8000);
 
 const apiPrefixes = [
+  '/api/v1',
+  '/api/v2',
   '/health',
   '/attacks',
   '/normal-flows',
